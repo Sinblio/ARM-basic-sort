@@ -1,0 +1,90 @@
+main:	ADDI X0, XZR, #1	//Set starting memory index
+	ADDI X1, XZR, #100	//Set array size
+	BL fill
+	BL sort
+
+search:
+	ADDI X2, XZR, #3	//Set number searched
+	BL isearch
+	ADD X4, XZR, X0
+	ADD X5, X0, X1
+	BL rsearch
+	SUB X9, X6, X3
+	STUR X9, [XZR, #0]
+	BL end
+
+fill:	ADD X10, XZR, X1
+	ADD X9, XZR, X0
+	LSL X9, X9, #3
+	loop1:	CBZ X10, exit1
+		STUR X10, [X9,#0]
+		SUBI X10, x10, #1
+		ADDI X9, X9, #8
+		B loop1
+	exit1:	BR LR
+
+swap:	LDUR X10, [X2, #0]
+	LDUR X11, [X3, #0]
+	STUR X11, [X2, #0]
+	STUR X10, [X3, #0]
+	BR LR
+	
+find:	ADD X9, XZR, X2
+	ADD X10, XZR, X9
+	loop2:	ADDI X10, X10, #8
+		LDUR X11, [X9, #0]
+		LDUR X12, [X10, #0]
+		CBZ X12, exit2
+		SUBS X13, X12, X11
+		B.LE newlow
+		B loop2
+	newlow:	ADD X9, XZR, X10
+		B loop2
+	exit2:	ADD X3, XZR, X9
+		BR LR	
+
+sort:	LSL X2, X0, #3
+	LSL X19, X1, #3
+	ADD X19, X19, X2
+	loop3:	BL find
+		BL swap
+		ADDI X2, X2, #8
+		SUB X11, X19, X2
+		CBNZ X11,loop3
+	BL search
+
+isearch:ADD X9, XZR, X0
+	ADD X10, X0, X1
+	loop4:	SUB X11, X10, X9
+		LSR X11, X11, #2
+		ADD X11, X11, X9
+		LSL X14, X11, #3
+		LDUR X12, [X14, #0]
+		SUBS X13, X2, X12
+		B.GT more1
+		B.LT less1
+		B exit3
+	more1:	ADD X9, XZR, X11
+		B loop4
+	less1:	ADD X10, XZR, X11
+		B loop4
+	exit3:	ADD X3, XZR, X14
+		BR LR
+
+rsearch:SUB X11, X5, X4
+	LSR X11, X11, #2
+	ADD X11, X11, X4
+	LSL X12, X11, #3
+	LDUR X13, [X12, #0]
+	SUBS X14, X2, X13
+	B.GT more2
+	B.LT less2
+	B exit4
+	more2:	ADD X4, XZR, X13
+		B rsearch
+	less2:	ADD X5, XZR, X13
+		B rsearch
+	exit4:	ADD X6, XZR, X12
+		BR LR
+
+end:	DUMP
